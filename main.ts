@@ -16,14 +16,6 @@ prepare.audio = {
     gameOver: new Audio('/assets/audio/game-over.mp3'),
 };
 
-prepare.audio.fullTrack = new Audio('/assets/audio/fulltrack.mp3');
-prepare.audio.good = new Audio('/assets/audio/good.mp3');
-prepare.audio.fail = new Audio('/assets/audio/fail.mp3');
-prepare.audio.flip = new Audio('/assets/audio/flip.mp3');
-prepare.audio.gameOver = new Audio('/assets/audio/game-over.mp3');
-
-prepare.audio.fullTrack.loop = true;
-
 const numberOfCards = 20; //
 const tempNumbers: number[] = [];
 let cardsHtmlContent = '';
