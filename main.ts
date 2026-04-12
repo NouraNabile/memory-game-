@@ -2,21 +2,29 @@ import type { IPrepare } from "./models/prepare.model"
 import type { ICard } from "./models/card.model"
 
 const prepare: IPrepare = {
-    isBusy: false
+    isBusy: false,
+    
+    
 };
 prepare.cards = [];
 prepare.progress = 0;
-prepare.isBusy = false; //  منع الضغط السريع
+prepare.audio = {
+    fullTrack: new Audio('/assets/audio/fulltrack.mp3'),
+    good: new Audio('/assets/audio/good.mp3'),
+    fail: new Audio('/assets/audio/fail.mp3'),
+    flip: new Audio('/assets/audio/flip.mp3'),
+    gameOver: new Audio('/assets/audio/game-over.mp3'),
+};
 
-prepare.fullTrack = new Audio('/assets/audio/fulltrack.mp3');
-prepare.goodAudio = new Audio('/assets/audio/good.mp3');
-prepare.failAudio = new Audio('/assets/audio/fail.mp3');
-prepare.flipAudio = new Audio('/assets/audio/flip.mp3');
-prepare.gameOverAudio = new Audio('/assets/audio/game-over.mp3');
+prepare.audio.fullTrack = new Audio('/assets/audio/fulltrack.mp3');
+prepare.audio.good = new Audio('/assets/audio/good.mp3');
+prepare.audio.fail = new Audio('/assets/audio/fail.mp3');
+prepare.audio.flip = new Audio('/assets/audio/flip.mp3');
+prepare.audio.gameOver = new Audio('/assets/audio/game-over.mp3');
 
-prepare.fullTrack.loop = true;
+prepare.audio.fullTrack.loop = true;
 
-const numberOfCards = 20;
+const numberOfCards = 20; //
 const tempNumbers: number[] = [];
 let cardsHtmlContent = '';
 
@@ -42,11 +50,10 @@ const getRandomInt = (min: number, max: number) => {
 //  التحكم في الضغط
 const toggleFlip = (index: number) => {
 
-    if (prepare.isBusy) return; //  منع الضغط أثناء المقارنة
+    if (prepare.isBusy) return; //  stop during comp
+    prepare.audio?.fullTrack?.play();
 
-    prepare.fullTrack?.play();
-
-    const card = prepare.cards[index];
+    const card = prepare.cards?.[index];
 
     if (card && card.clickable && !card.flip) {
         flip(card, index, true);
@@ -56,7 +63,7 @@ const toggleFlip = (index: number) => {
 
 //  flip بالـ state
 function flip(card: ICard, index: number, state?: boolean) {
-    prepare.flipAudio?.play();
+    prepare.audio?.flip?.play();
 
     if (state !== undefined) {
         card.flip = state;
@@ -70,33 +77,33 @@ function flip(card: ICard, index: number, state?: boolean) {
 
 function selectCard(card: ICard, index: number) {
 
-    if (!prepare.selectedCard_1) {
-        prepare.selectedCard_1 = card;
-        prepare.selectedIndex_1 = index;
+    if (!prepare.sCard_1) {
+        prepare.sCard_1 = card;
+        prepare.sIndex_1 = index;
         return;
     }
 
-    if (!prepare.selectedCard_2) {
-        prepare.selectedCard_2 = card;
-        prepare.selectedIndex_2 = index;
+    if (!prepare.sCard_2) {
+        prepare.sCard_2 = card;
+        prepare.sIndex_2 = index;
     }
 
-    if (prepare.selectedCard_1 && prepare.selectedCard_2) {
+    if (prepare.sCard_1 && prepare.sCard_2) {
 
         prepare.isBusy = true; //  قفل اللعب
 
-        if (prepare.selectedCard_1.src === prepare.selectedCard_2.src) {
+        if (prepare.sCard_1.src === prepare.sCard_2.src) {
 
-            prepare.selectedCard_1.clickable = false;
-            prepare.selectedCard_2.clickable = false;
+            prepare.sCard_1.clickable = false;
+            prepare.sCard_2.clickable = false;
 
-            prepare.selectedCard_1 = null;
-            prepare.selectedCard_2 = null;
+            prepare.sCard_1 = null;
+            prepare.sCard_2 = null;
 
-            stopAudio(prepare.failAudio);
-            stopAudio(prepare.gameOverAudio);
+            stopAudio(prepare.audio?.fail);
+            stopAudio(prepare.audio?.gameOver);
 
-            prepare.goodAudio.play();
+            prepare.audio?.good?.play();
 
             changeProgress();
             checkFinish();
@@ -107,16 +114,16 @@ function selectCard(card: ICard, index: number) {
 
             setTimeout(() => {
 
-                stopAudio(prepare.failAudio);
-                stopAudio(prepare.goodAudio);
+                stopAudio(prepare.audio?.fail);
+                stopAudio(prepare.audio?.good);
 
-                prepare.failAudio?.play();
+                prepare.audio?.fail?.play();
 
-                flip(prepare.selectedCard_1!, prepare.selectedIndex_1!, false);
-                flip(prepare.selectedCard_2!, prepare.selectedIndex_2!, false);
+                flip(prepare.sCard_1!, prepare.sIndex_1!, false);
+                flip(prepare.sCard_2!, prepare.sIndex_2!, false);
 
-                prepare.selectedCard_1 = null;
-                prepare.selectedCard_2 = null;
+                prepare.sCard_1 = null;
+                prepare.sCard_2 = null;
 
                 prepare.isBusy = false; //  فتح اللعب
 
@@ -142,15 +149,22 @@ function changeProgress() {
         progressElement.innerHTML = `${Math.floor(progress)}%`;
     }
 }
+function stopSound() {
+     if (prepare.audio?.fullTrack) {
+        prepare.audio.fullTrack.loop = false;
+        prepare.audio.fullTrack.pause();
+        prepare.audio.fullTrack.currentTime = 0;
+    }
+}
 
 const checkFinish = () => {
     if (prepare.cards?.filter(card => !card.clickable).length === numberOfCards) {
 
-        stopAudio(prepare.fullTrack);
-        stopAudio(prepare.failAudio);
-        stopAudio(prepare.goodAudio);
+        stopAudio(prepare.audio?.fullTrack);
+        stopAudio(prepare.audio?.fail);
+        stopAudio(prepare.audio?.good);
 
-        prepare.gameOverAudio?.play();
+        prepare.audio?.gameOver?.play();
     }
 };
 
@@ -204,7 +218,9 @@ prepare.cards.forEach((item, index) => {
 });
 
 const cardsElement = document.getElementById('cards');
-cardsElement.innerHTML = cardsHtmlContent;
+if (cardsElement) {
+    cardsElement.innerHTML = cardsHtmlContent;
+}
 
 //  onclick
 (window as any).toggleFlip = toggleFlip;
